@@ -32,6 +32,7 @@ function createWindow() {
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'),
     },
+     autoHideMenuBar: true, // ✅ 自动隐藏菜单栏
   })
 
   // Test active push message to Renderer-process.
