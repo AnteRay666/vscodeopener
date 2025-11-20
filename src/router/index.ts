@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHashHistory } from 'vue-router'
 import DefaultLayout from '@/Layouts/DefaultLayout.vue'
 
 const routes = [
@@ -16,7 +16,7 @@ const routes = [
         name: 'projectlist',
         component: () => import('@/views/ProjectListView.vue'),
       },
-            {
+      {
         path: 'test',
         name: 'test',
         component: () => import('@/views/testView.vue'),
@@ -31,6 +31,7 @@ const routes = [
 ]
 
 export default createRouter({
-  history: createWebHistory(),
+  // history: createWebHistory(),
+  history: createWebHashHistory(),
   routes,
 })

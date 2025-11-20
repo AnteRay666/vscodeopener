@@ -1,12 +1,1 @@
-"use strict";
-const electron = require("electron");
-const api = {
-  // 通用 ipc 调用（可选保留）
-  invoke: (channel, ...args) => electron.ipcRenderer.invoke(channel, ...args),
-  // 🔹 打开文本文件
-  openTxtFile: async () => {
-    const result = await electron.ipcRenderer.invoke("open-txt-file");
-    return result;
-  }
-};
-electron.contextBridge.exposeInMainWorld("electronAPI", api);
+"use strict";const e=require("electron"),n={invoke:(r,...i)=>e.ipcRenderer.invoke(r,...i),openTxtFile:async()=>await e.ipcRenderer.invoke("open-txt-file"),readUserConfig:()=>e.ipcRenderer.invoke("read-user-config"),writeUserConfig:r=>e.ipcRenderer.invoke("write-user-config",r),getProjectList:()=>e.ipcRenderer.invoke("get-project-list"),addProject:r=>e.ipcRenderer.invoke("add-project",r),openFolderDialog:()=>e.ipcRenderer.invoke("open-folder-dialog")};e.contextBridge.exposeInMainWorld("electronAPI",n);

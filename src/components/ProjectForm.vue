@@ -33,15 +33,13 @@
                         class="block text-sm font-medium text-gray-700 dark:text-gray-300">项目路径</label>
                     <div class="flex items-center mt-1">
                         <input type="text" id="projectPath" v-model="form.path"
-                            class="flex-1 px-3 py-2 border border-gray-300 rounded-l-md shadow-sm bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400 cursor-not-allowed"
-                            placeholder="通过 '选择文件夹' 获取 (暂不可用)" readonly />
+                            class="flex-1 px-3 py-2 border border-gray-300 rounded-l-md shadow-sm bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400"
+                            placeholder="点击右侧按钮选择" readonly />
                         <button type="button" @click="selectFolder"
-                            class="px-4 py-2 bg-gray-200 text-gray-700 rounded-r-md border border-l-0 border-gray-300 hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-500 transition-colors"
-                            disabled>
+                            class="px-4 py-2 bg-gray-200 text-gray-700 rounded-r-md border border-l-0 border-gray-300 hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-500 transition-colors">
                             选择文件夹
                         </button>
                     </div>
-                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">此功能将在 Electron 实现后启用。</p>
                 </div>
 
                 <div class="flex justify-end space-x-3">
@@ -92,16 +90,25 @@ watch(() => props.isVisible, (newVal) => {
 })
 
 const submitForm = () => {
-    if (!form.value.name || !form.value.description) {
-        alert('请填写项目名称和描述！');
+    if (!form.value.name || !form.value.path) {
+        alert('请选择一个项目文件夹！');
         return;
     }
     emit('add-project', { ...form.value });
     closeForm();
 }
 
-const selectFolder = () => {
-    console.log('选择文件夹功能将在 Electron 实现后可用。');
+const selectFolder = async () => {
+    try {
+        const folderPath = await window.electronAPI.openFolderDialog();
+        if (folderPath) {
+            form.value.path = folderPath;
+            // 自动填充项目名称
+            form.value.name = folderPath.split(/[\\/]/).pop() || '';
+        }
+    } catch (error) {
+        console.error('Failed to open folder dialog:', error);
+    }
 }
 
 const closeForm = () => {

@@ -16,13 +16,23 @@
         <p class="mt-6 text-gray-600 dark:text-gray-400">
             当前主题：<span class="font-semibold">{{ themeLabel }}</span>
         </p>
+
+        <div class="mt-8">
+            <h2 class="text-xl font-semibold mb-4">用户配置 (user.json)</h2>
+            <textarea v-model="configText"
+                class="w-full h-64 p-2 border rounded bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-700"></textarea>
+            <button @click="saveConfig"
+                class="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
+                保存
+            </button>
+        </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useThemeStore } from '@/stores/theme'
-import type { ThemeMode } from '@/stores/theme'
+import { computed, ref, onMounted } from 'vue'
+import { useThemeStore } from '../stores/theme'
+import type { ThemeMode } from '../stores/theme'
 // 使用 Pinia store
 const themeStore = useThemeStore()
 const theme = computed(() => themeStore.theme)
@@ -45,4 +55,26 @@ const options: { label: string; value: ThemeMode }[] = [
     { label: '🌙 暗黑模式', value: 'dark' },
     { label: '🖥️ 跟随系统', value: 'system' },
 ]
+
+// IPC
+const configText = ref('')
+
+const loadConfig = async () => {
+    const data = await window.electronAPI.readUserConfig()
+    configText.value = JSON.stringify(data, null, 2)
+}
+
+onMounted(() => {
+    loadConfig()
+})
+
+const saveConfig = () => {
+    try {
+        const parsedData = JSON.parse(configText.value)
+        window.electronAPI.writeUserConfig(parsedData)
+        alert('保存成功！')
+    } catch (error) {
+        alert('配置格式错误，请检查！')
+    }
+}
 </script>

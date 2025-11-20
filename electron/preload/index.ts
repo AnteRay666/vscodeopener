@@ -10,6 +10,13 @@ const api = {
         const result = await ipcRenderer.invoke('open-txt-file')
         return result // { path, content } 或 null
     },
+
+    // 读写用户配置
+    readUserConfig: () => ipcRenderer.invoke('read-user-config'),
+    writeUserConfig: (data: any) => ipcRenderer.invoke('write-user-config', data),
+    getProjectList: () => ipcRenderer.invoke('get-project-list'),
+    addProject: (project: any) => ipcRenderer.invoke('add-project', project),
+    openFolderDialog: () => ipcRenderer.invoke('open-folder-dialog'),
 }
 
 // ---- 暴露到前端 ----

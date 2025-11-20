@@ -10,8 +10,7 @@ const app = createApp(App)
 app.use(createPinia())
 app.use(router)
 
-// 挂载应用
-const vm = app.mount('#app')
+app.mount('#app')
 
 // 在应用挂载并渲染后执行
 nextTick(() => {
