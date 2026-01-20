@@ -6,6 +6,10 @@ export interface IElectronAPI {
   getProjectList: () => Promise<any[]>
   addProject: (project: any) => Promise<void>
   openFolderDialog: () => Promise<string | undefined>
+  openInVscode: (projectPath: string) => Promise<{ success: boolean; error?: string }>
+  openInExplorer: (projectPath: string) => Promise<{ success: boolean; error?: string }>
+  updateProject: (oldPath: string, updatedProject: any) => Promise<{ success: boolean; error?: string }>
+  deleteProject: (projectPath: string) => Promise<{ success: boolean; error?: string }>
 }
 
 declare global {

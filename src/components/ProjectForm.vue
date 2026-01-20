@@ -9,7 +9,9 @@
                     colorClass="text-gray-400 dark:text-gray-300 group-hover:text-gray-600 dark:hover:text-gray-100" />
             </button>
 
-            <h2 class="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100">添加新项目</h2>
+            <h2 class="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100">
+                {{ isEditMode ? '编辑项目' : '添加新项目' }}
+            </h2>
 
             <form @submit.prevent="submitForm">
                 <div class="mb-4">
@@ -58,8 +60,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, defineProps, defineEmits } from 'vue'
+import { ref, watch } from 'vue'
 import Icon from '@/components/Icon.vue' // 导入你的 Icon 组件
+import { useModal } from '@/composables/useModal'
 
 interface ProjectFormData {
     name: string
@@ -69,9 +72,15 @@ interface ProjectFormData {
 
 const props = defineProps<{
     isVisible: boolean
+    editProject?: {
+        name: string
+        description: string
+        path: string
+    } | null
 }>()
 
-const emit = defineEmits(['close', 'add-project'])
+const emit = defineEmits(['close', 'add-project', 'update-project'])
+const { alert } = useModal()
 
 const form = ref<ProjectFormData>({
     name: '',
@@ -79,22 +88,46 @@ const form = ref<ProjectFormData>({
     path: '',
 })
 
+const isEditMode = ref(false)
+const originalPath = ref('')
+
 watch(() => props.isVisible, (newVal) => {
     if (newVal) {
-        form.value = {
-            name: '',
-            description: '',
-            path: '',
+        if (props.editProject) {
+            // 编辑模式：填充现有数据
+            isEditMode.value = true
+            originalPath.value = props.editProject.path
+            form.value = {
+                name: props.editProject.name,
+                description: props.editProject.description,
+                path: props.editProject.path,
+            }
+        } else {
+            // 添加模式：清空表单
+            isEditMode.value = false
+            originalPath.value = ''
+            form.value = {
+                name: '',
+                description: '',
+                path: '',
+            }
         }
     }
 })
 
-const submitForm = () => {
+const submitForm = async () => {
     if (!form.value.name || !form.value.path) {
-        alert('请选择一个项目文件夹！');
+        await alert('请选择一个项目文件夹！', 'warning', '提示');
         return;
     }
-    emit('add-project', { ...form.value });
+
+    if (isEditMode.value) {
+        // 编辑模式：发送更新事件
+        emit('update-project', originalPath.value, { ...form.value });
+    } else {
+        // 添加模式：发送添加事件
+        emit('add-project', { ...form.value });
+    }
     closeForm();
 }
 

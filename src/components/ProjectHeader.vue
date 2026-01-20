@@ -12,7 +12,7 @@
 </template>
 
 <script setup lang="ts">
-import { defineEmits } from 'vue'
+// defineEmits 是编译器宏，无需导入
 import Icon from '@/components/Icon.vue' // 导入你的 Icon 组件
 
 const emit = defineEmits(['open-form'])

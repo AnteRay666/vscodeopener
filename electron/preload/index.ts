@@ -17,6 +17,18 @@ const api = {
     getProjectList: () => ipcRenderer.invoke('get-project-list'),
     addProject: (project: any) => ipcRenderer.invoke('add-project', project),
     openFolderDialog: () => ipcRenderer.invoke('open-folder-dialog'),
+
+    // 🔹 打开 VSCode
+    openInVscode: (projectPath: string) => ipcRenderer.invoke('open-in-vscode', projectPath),
+
+    // 🔹 在资源管理器中打开
+    openInExplorer: (projectPath: string) => ipcRenderer.invoke('open-in-explorer', projectPath),
+
+    // 🔹 更新项目
+    updateProject: (oldPath: string, updatedProject: any) => ipcRenderer.invoke('update-project', oldPath, updatedProject),
+
+    // 🔹 删除项目
+    deleteProject: (projectPath: string) => ipcRenderer.invoke('delete-project', projectPath),
 }
 
 // ---- 暴露到前端 ----
