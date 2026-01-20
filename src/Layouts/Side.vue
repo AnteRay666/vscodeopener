@@ -1,41 +1,41 @@
 <template>
     <aside
-        class="h-screen w-20 flex flex-col justify-between py-4 bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300">
+        class="h-full w-20 flex flex-col justify-between py-4 bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300">
         <!-- 上部图标 -->
         <nav class="flex flex-col items-center space-y-4">
             <RouterLink v-for="item in topMenu" :key="item.path" :to="item.path"
+                :aria-label="item.label"
                 class="relative flex items-center justify-center w-12 h-12 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-800 transition group"
                 :class="{ 'bg-gray-800': isActive(item.path) }">
-                <!-- group 放在图标上，控制悬浮 -->
-                <div class="relative group">
-                    <Icon :name="item.icon" />
+                <Icon :name="item.icon" />
 
-                    <!-- 悬浮提示文字 -->
-                    <span
-                        class="absolute left-14 top-1/2 -translate-y-1/2 px-2 py-1 text-sm bg-gray-800 text-white rounded-md opacity-0 pointer-events-none group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200 whitespace-nowrap shadow-lg">
-                        {{ item.label }}
-                    </span>
-                </div>
+                <!-- 悬浮提示文字 -->
+                <span
+                    aria-hidden="true"
+                    class="absolute left-14 top-1/2 -translate-y-1/2 px-2 py-1 text-sm bg-gray-800 text-white rounded-md opacity-0 pointer-events-none group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200 whitespace-nowrap shadow-lg z-50">
+                    {{ item.label }}
+                </span>
             </RouterLink>
         </nav>
 
         <!-- 下部图标 -->
         <nav class="flex flex-col items-center space-y-4">
-            <div @click.prevent="toggleTheme"
+            <button @click="toggleTheme"
+                aria-label="切换主题"
                 class="relative flex items-center justify-center w-12 h-12 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-800 transition group">
                 <Icon :name="theme === 'dark' ? 'SunIcon' : 'MoonIcon'" />
-            </div>
+            </button>
             <RouterLink v-for="item in bottomMenu" :key="item.path" :to="item.path"
+                :aria-label="item.label"
                 class="relative flex items-center justify-center w-12 h-12 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-800 transition group"
                 :class="{ 'bg-gray-800': isActive(item.path) }">
-                <div class="relative group">
-                    <Icon :name="item.icon" />
+                <Icon :name="item.icon" />
 
-                    <span
-                        class="absolute left-14 top-1/2 -translate-y-1/2 px-2 py-1 text-sm bg-gray-800 text-white rounded-md opacity-0 pointer-events-none group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200 whitespace-nowrap shadow-lg">
-                        {{ item.label }}
-                    </span>
-                </div>
+                <span
+                    aria-hidden="true"
+                    class="absolute left-14 top-1/2 -translate-y-1/2 px-2 py-1 text-sm bg-gray-800 text-white rounded-md opacity-0 pointer-events-none group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200 whitespace-nowrap shadow-lg z-50">
+                    {{ item.label }}
+                </span>
             </RouterLink>
         </nav>
     </aside>

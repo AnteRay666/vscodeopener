@@ -6,8 +6,10 @@
   productName: "VscodeOpener",
   directories: {
     output: "release/${version}",
+    buildResources: "build",
   },
   files: ["dist", "dist-electron"],
+  icon: "build/icon",
   mac: {
     target: ["dmg"],
     artifactName: "${productName}-Mac-${version}-Installer.${ext}",

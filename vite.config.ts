@@ -47,4 +47,31 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     },
   },
+  build: {
+    // 提高 chunk 大小警告限制到 1000 kB
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        // 手动配置代码分割
+        manualChunks: {
+          // Vue 核心库
+          'vue-vendor': ['vue', 'vue-router', 'pinia'],
+          // Heroicons 图标库
+          'icons': ['@heroicons/vue'],
+        },
+      },
+    },
+    // 启用 CSS 代码分割
+    cssCodeSplit: true,
+    // 压缩选项
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        // 移除 console
+        drop_console: true,
+        // 移除 debugger
+        drop_debugger: true,
+      },
+    },
+  },
 })

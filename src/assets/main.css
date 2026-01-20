@@ -1,5 +1,23 @@
 @import 'tailwindcss';
 @custom-variant dark (&:where(.dark, .dark *));
-.body {
+
+/* 全局取消 focus 轮廓 */
+*:focus {
+  outline: none;
+}
+
+*:focus-visible {
+  outline: none;
+}
+
+html, body {
   margin: 0;
+  padding: 0;
+  overflow: hidden;
+  height: 100%;
+}
+
+#app {
+  height: 100%;
+  overflow-y: auto;
 }

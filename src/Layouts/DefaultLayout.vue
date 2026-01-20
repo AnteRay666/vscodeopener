@@ -10,7 +10,7 @@
             <Side />
 
             <!-- 右侧内容区域 -->
-            <main class="flex-1 overflow-y-auto custom-scrollbar">
+            <main class="flex-1 overflow-y-auto custom-scrollbar dark:bg-gray-950 dark:text-gray-100">
                 <RouterView />
             </main>
         </div>
