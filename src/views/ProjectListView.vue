@@ -2,7 +2,7 @@
 <template>
   <!-- ProjectHeader 组件 -->
   <ProjectHeader @open-form="isFormVisible = true" />
-  <div class="min-h-screen bg-white text-gray-900 dark:bg-gray-950 dark:text-gray-100 transition-colors">
+  <div class="min-h-screen page-background text-gray-900 dark:text-gray-100 transition-colors">
     <!-- 卡片网格容器 -->
     <div class="container-wrapper">
       <div class="cards-grid">
@@ -116,10 +116,42 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* 清新简约的页面背景 */
+.page-background {
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8f4f8 50%, #f0f9ff 100%);
+  position: relative;
+}
+
+.page-background::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(147, 197, 253, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(167, 243, 208, 0.08) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+/* 深色模式 */
+.dark .page-background {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+}
+
+.dark .page-background::before {
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(34, 197, 94, 0.08) 0%, transparent 50%);
+}
+
 .container-wrapper {
   padding: 2rem 1rem;
   max-width: 1920px;
   margin: 0 auto;
+  position: relative;
+  z-index: 1;
 }
 
 .cards-grid {

@@ -29,6 +29,14 @@ const api = {
 
     // 🔹 删除项目
     deleteProject: (projectPath: string) => ipcRenderer.invoke('delete-project', projectPath),
+
+    // 🔹 窗口控制
+    windowControl: (action: 'minimize' | 'maximize' | 'close') => ipcRenderer.send('window-control', action),
+
+    // 🔹 监听窗口最大化状态变化
+    onMaximizeChange: (callback: (event: any, isMaximized: boolean) => void) => {
+        ipcRenderer.on('maximize-change', callback)
+    },
 }
 
 // ---- 暴露到前端 ----

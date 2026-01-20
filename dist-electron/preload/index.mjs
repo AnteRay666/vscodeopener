@@ -21,6 +21,12 @@ const api = {
   // 🔹 更新项目
   updateProject: (oldPath, updatedProject) => electron.ipcRenderer.invoke("update-project", oldPath, updatedProject),
   // 🔹 删除项目
-  deleteProject: (projectPath) => electron.ipcRenderer.invoke("delete-project", projectPath)
+  deleteProject: (projectPath) => electron.ipcRenderer.invoke("delete-project", projectPath),
+  // 🔹 窗口控制
+  windowControl: (action) => electron.ipcRenderer.send("window-control", action),
+  // 🔹 监听窗口最大化状态变化
+  onMaximizeChange: (callback) => {
+    electron.ipcRenderer.on("maximize-change", callback);
+  }
 };
 electron.contextBridge.exposeInMainWorld("electronAPI", api);

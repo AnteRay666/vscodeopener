@@ -3,7 +3,7 @@
   "author": "Ante",
   "description": "这是一个通过VScode快速启动你的项目的应用.",
   "private": true,
-  "version": "0.0.2",
+  "version": "0.0.3",
   "type": "module",
   "scripts": {
     "dev": "chcp 65001 && vite",

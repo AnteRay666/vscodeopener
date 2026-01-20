@@ -1,6 +1,6 @@
 <!-- src/layouts/Main.vue -->
 <template>
-  <main class="p-6">
+  <main class="p-6 overflow-y-auto">
     <!-- 这里的 router-view 会切换 views 下的页面 -->
     <RouterView />
   </main>

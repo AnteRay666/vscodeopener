@@ -108,6 +108,17 @@ function onAbandonClick() {
 .project-card {
     min-height: 280px;
     max-width: 100%;
+    overflow: hidden;
+}
+
+/* 隐藏滚动条 */
+.project-card::-webkit-scrollbar {
+    display: none;
+}
+
+.project-card {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
 }
 
 .tooltip {

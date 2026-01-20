@@ -7,6 +7,9 @@ export function createWindow() {
         width: 1920,
         height: 1280,
         autoHideMenuBar: true,
+        frame: false, // 隐藏原生窗口边框
+        transparent: false,
+        backgroundColor: '#0f172a',
         icon: path.join(process.env.VITE_PUBLIC!, 'electron-vite.svg'),
         webPreferences: {
             preload: path.join(__dirname, '../preload/index.mjs'), // ✅ 注意路径
@@ -23,6 +26,15 @@ export function createWindow() {
 
     win.webContents.on('did-finish-load', () => {
         win.webContents.send('main-process-message', new Date().toLocaleString())
+    })
+
+    // 监听窗口最大化/还原事件，通知渲染进程
+    win.on('maximize', () => {
+        win.webContents.send('maximize-change', true)
+    })
+
+    win.on('unmaximize', () => {
+        win.webContents.send('maximize-change', false)
     })
 
     return win

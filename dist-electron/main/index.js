@@ -16,6 +16,10 @@ function createWindow() {
     width: 1920,
     height: 1280,
     autoHideMenuBar: true,
+    frame: false,
+    // 隐藏原生窗口边框
+    transparent: false,
+    backgroundColor: "#0f172a",
     icon: path.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
     webPreferences: {
       preload: path.join(__dirname, "../preload/index.mjs"),
@@ -32,6 +36,12 @@ function createWindow() {
   }
   win2.webContents.on("did-finish-load", () => {
     win2.webContents.send("main-process-message", (/* @__PURE__ */ new Date()).toLocaleString());
+  });
+  win2.on("maximize", () => {
+    win2.webContents.send("maximize-change", true);
+  });
+  win2.on("unmaximize", () => {
+    win2.webContents.send("maximize-change", false);
   });
   return win2;
 }
@@ -172,6 +182,33 @@ function registerConfigIPC() {
     }
   });
 }
+function registerWindowIPC() {
+  ipcMain.on("window-control", (event, action) => {
+    const win2 = BrowserWindow.fromWebContents(event.sender);
+    if (!win2) return;
+    switch (action) {
+      case "minimize":
+        win2.minimize();
+        break;
+      case "maximize":
+        if (win2.isMaximized()) {
+          win2.unmaximize();
+        } else {
+          win2.maximize();
+        }
+        break;
+      case "close":
+        win2.close();
+        break;
+    }
+  });
+  ipcMain.on("get-maximize-state", (event) => {
+    const win2 = BrowserWindow.fromWebContents(event.sender);
+    if (win2) {
+      event.reply("maximize-change", win2.isMaximized());
+    }
+  });
+}
 let win = null;
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
@@ -185,5 +222,6 @@ app.on("activate", () => {
 app.whenReady().then(() => {
   win = createWindow();
   registerConfigIPC();
+  registerWindowIPC();
   console.log("Main window created:", win.id);
 });
