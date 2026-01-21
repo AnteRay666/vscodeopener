@@ -1,180 +1,272 @@
-import { BrowserWindow as d, ipcMain as i, dialog as h, app as c, shell as x } from "electron";
-import s from "path";
-import { fileURLToPath as j } from "url";
-import t from "fs";
-import { exec as F } from "child_process";
-import { promisify as P } from "util";
-const w = s.dirname(j(import.meta.url)), u = s.join(w, "..", "..");
-s.join(u, "dist-electron");
-const g = s.join(u, "dist"), p = process.env.VITE_DEV_SERVER_URL;
-process.env.APP_ROOT = u;
-process.env.VITE_PUBLIC = p ? s.join(u, "public") : g;
-function S() {
-  const r = new d({
-    width: 1920,
-    height: 1280,
-    autoHideMenuBar: !0,
-    frame: !1,
+import { app, BrowserWindow, ipcMain, dialog, shell } from "electron";
+import path from "path";
+import { fileURLToPath } from "url";
+import fs from "fs";
+import { exec } from "child_process";
+import { promisify } from "util";
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const APP_ROOT = path.join(__dirname, "..", "..");
+path.join(APP_ROOT, "dist-electron");
+const RENDERER_DIST = path.join(APP_ROOT, "dist");
+const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
+process.env.APP_ROOT = APP_ROOT;
+process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(APP_ROOT, "public") : RENDERER_DIST;
+const configFilePath = path.join(app.getPath("userData"), "VsCodeOpener", "user.json");
+function readConfig() {
+  try {
+    if (fs.existsSync(configFilePath)) {
+      const data = fs.readFileSync(configFilePath, "utf-8");
+      const config = JSON.parse(data);
+      return config;
+    } else {
+    }
+  } catch (error) {
+    console.error("Failed to read config:", error);
+  }
+  return {};
+}
+function writeConfig(config) {
+  try {
+    const dir = path.dirname(configFilePath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    const jsonString = JSON.stringify(config, null, 2);
+    fs.writeFileSync(configFilePath, jsonString, "utf-8");
+    if (fs.existsSync(configFilePath)) {
+      return true;
+    } else {
+      console.error("Config file was not created!");
+      return false;
+    }
+  } catch (error) {
+    console.error("Failed to write config:", error);
+    return false;
+  }
+}
+function updateConfig(updates) {
+  const currentConfig = readConfig();
+  const newConfig = { ...currentConfig, ...updates };
+  return writeConfig(newConfig);
+}
+function loadWindowConfig() {
+  const config = readConfig();
+  if (config.windowBounds) {
+    return config.windowBounds;
+  }
+  return { width: 1080, height: 720 };
+}
+function saveWindowConfig(bounds) {
+  const success = updateConfig({ windowBounds: bounds });
+  if (success) ;
+  else {
+    console.error("Failed to save window bounds");
+  }
+}
+function createWindow() {
+  const windowConfig = loadWindowConfig();
+  const win2 = new BrowserWindow({
+    width: windowConfig.width,
+    height: windowConfig.height,
+    autoHideMenuBar: true,
+    frame: false,
     // 隐藏原生窗口边框
-    transparent: !1,
+    transparent: false,
     backgroundColor: "#0f172a",
-    icon: s.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
+    icon: path.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
     webPreferences: {
-      preload: s.join(w, "../preload/index.mjs"),
+      preload: path.join(__dirname, "../preload/index.mjs"),
       // ✅ 注意路径
-      contextIsolation: !0,
-      nodeIntegration: !1
+      contextIsolation: true,
+      nodeIntegration: false
       // ✅ 安全模式
     }
   });
-  return p ? r.loadURL(p) : r.loadFile(s.join(g, "index.html")), r.webContents.on("did-finish-load", () => {
-    r.webContents.send("main-process-message", (/* @__PURE__ */ new Date()).toLocaleString());
-  }), r.on("maximize", () => {
-    r.webContents.send("maximize-change", !0);
-  }), r.on("unmaximize", () => {
-    r.webContents.send("maximize-change", !1);
-  }), r;
+  if (VITE_DEV_SERVER_URL) {
+    win2.loadURL(VITE_DEV_SERVER_URL);
+  } else {
+    win2.loadFile(path.join(RENDERER_DIST, "index.html"));
+  }
+  win2.webContents.on("did-finish-load", () => {
+    win2.webContents.send("main-process-message", (/* @__PURE__ */ new Date()).toLocaleString());
+  });
+  win2.on("maximize", () => {
+    win2.webContents.send("maximize-change", true);
+  });
+  win2.on("unmaximize", () => {
+    win2.webContents.send("maximize-change", false);
+  });
+  win2.on("close", () => {
+    if (!win2.isDestroyed()) {
+      const bounds = win2.getBounds();
+      saveWindowConfig({ width: bounds.width, height: bounds.height });
+    }
+  });
+  return win2;
 }
-const _ = P(F);
-i.handle("open-txt-file", async () => {
-  const { canceled: r, filePaths: n } = await h.showOpenDialog({
+const execAsync = promisify(exec);
+ipcMain.handle("open-txt-file", async () => {
+  const { canceled, filePaths } = await dialog.showOpenDialog({
     title: "选择一个文本文件",
     filters: [{ name: "Text Files", extensions: ["txt"] }],
     properties: ["openFile"]
   });
-  if (r || n.length === 0) return null;
-  const e = n[0], o = t.readFileSync(e, "utf-8");
-  return { path: e, content: o };
+  if (canceled || filePaths.length === 0) return null;
+  const filePath = filePaths[0];
+  const content = fs.readFileSync(filePath, "utf-8");
+  return { path: filePath, content };
 });
-i.handle("open-folder-dialog", async () => {
-  const { canceled: r, filePaths: n } = await h.showOpenDialog({
+ipcMain.handle("open-folder-dialog", async () => {
+  const { canceled, filePaths } = await dialog.showOpenDialog({
     title: "选择一个文件夹",
     properties: ["openDirectory"]
   });
-  if (!(r || n.length === 0))
-    return n[0];
+  if (canceled || filePaths.length === 0) return void 0;
+  return filePaths[0];
 });
-const a = s.join(c.getPath("userData"), "projectlist.json");
-i.handle("get-project-list", async () => {
+const projectListPath = path.join(app.getPath("userData"), "projectlist.json");
+ipcMain.handle("get-project-list", async () => {
   try {
-    if (t.existsSync(a)) {
-      const r = t.readFileSync(a, "utf-8");
-      return JSON.parse(r);
+    if (fs.existsSync(projectListPath)) {
+      const data = fs.readFileSync(projectListPath, "utf-8");
+      return JSON.parse(data);
     }
     return [];
-  } catch (r) {
-    return console.error("Failed to read project list:", r), [];
+  } catch (error) {
+    console.error("Failed to read project list:", error);
+    return [];
   }
 });
-i.handle("add-project", async (r, n) => {
+ipcMain.handle("add-project", async (_, project) => {
   try {
-    let e = [];
-    if (t.existsSync(a)) {
-      const o = t.readFileSync(a, "utf-8");
-      e = JSON.parse(o);
+    let projects = [];
+    if (fs.existsSync(projectListPath)) {
+      const data = fs.readFileSync(projectListPath, "utf-8");
+      projects = JSON.parse(data);
     }
-    e.push(n), t.writeFileSync(a, JSON.stringify(e, null, 2));
-  } catch (e) {
-    console.error("Failed to add project:", e);
+    projects.push(project);
+    fs.writeFileSync(projectListPath, JSON.stringify(projects, null, 2));
+  } catch (error) {
+    console.error("Failed to add project:", error);
   }
 });
-i.handle("open-json-file", async () => {
-  const { canceled: r, filePaths: n } = await h.showOpenDialog({
+ipcMain.handle("open-json-file", async () => {
+  const { canceled, filePaths } = await dialog.showOpenDialog({
     title: "选择一个Json文件",
     filters: [{ name: "Json Files", extensions: ["json"] }],
     properties: ["openFile"]
   });
-  if (r || n.length === 0) return null;
-  const e = n[0], o = t.readFileSync(e, "utf-8");
-  return { path: e, content: o };
+  if (canceled || filePaths.length === 0) return null;
+  const filePath = filePaths[0];
+  const content = fs.readFileSync(filePath, "utf-8");
+  return { path: filePath, content };
 });
-i.handle("open-in-vscode", async (r, n) => {
+ipcMain.handle("open-in-vscode", async (_, projectPath) => {
   try {
-    return await _(`code "${n}"`), { success: !0 };
-  } catch (e) {
-    return console.error("Failed to open VSCode:", e), { success: !1, error: String(e) };
+    await execAsync(`code "${projectPath}"`);
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to open VSCode:", error);
+    return { success: false, error: String(error) };
   }
 });
-i.handle("open-in-explorer", async (r, n) => {
+ipcMain.handle("open-in-explorer", async (_, projectPath) => {
   try {
-    return await x.openPath(n), { success: !0 };
-  } catch (e) {
-    return console.error("Failed to open explorer:", e), { success: !1, error: String(e) };
+    await shell.openPath(projectPath);
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to open explorer:", error);
+    return { success: false, error: String(error) };
   }
 });
-i.handle("update-project", async (r, n, e) => {
+ipcMain.handle("update-project", async (_, oldPath, updatedProject) => {
   try {
-    let o = [];
-    if (t.existsSync(a)) {
-      const f = t.readFileSync(a, "utf-8");
-      o = JSON.parse(f);
+    let projects = [];
+    if (fs.existsSync(projectListPath)) {
+      const data = fs.readFileSync(projectListPath, "utf-8");
+      projects = JSON.parse(data);
     }
-    const y = o.findIndex((f) => f.path === n);
-    return y !== -1 ? (o[y] = e, t.writeFileSync(a, JSON.stringify(o, null, 2)), { success: !0 }) : { success: !1, error: "Project not found" };
-  } catch (o) {
-    return console.error("Failed to update project:", o), { success: !1, error: String(o) };
+    const index = projects.findIndex((p) => p.path === oldPath);
+    if (index !== -1) {
+      projects[index] = updatedProject;
+      fs.writeFileSync(projectListPath, JSON.stringify(projects, null, 2));
+      return { success: true };
+    }
+    return { success: false, error: "Project not found" };
+  } catch (error) {
+    console.error("Failed to update project:", error);
+    return { success: false, error: String(error) };
   }
 });
-i.handle("delete-project", async (r, n) => {
+ipcMain.handle("delete-project", async (_, projectPath) => {
   try {
-    let e = [];
-    if (t.existsSync(a)) {
-      const o = t.readFileSync(a, "utf-8");
-      e = JSON.parse(o);
+    let projects = [];
+    if (fs.existsSync(projectListPath)) {
+      const data = fs.readFileSync(projectListPath, "utf-8");
+      projects = JSON.parse(data);
     }
-    return e = e.filter((o) => o.path !== n), t.writeFileSync(a, JSON.stringify(e, null, 2)), { success: !0 };
-  } catch (e) {
-    return console.error("Failed to delete project:", e), { success: !1, error: String(e) };
+    projects = projects.filter((p) => p.path !== projectPath);
+    fs.writeFileSync(projectListPath, JSON.stringify(projects, null, 2));
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to delete project:", error);
+    return { success: false, error: String(error) };
   }
 });
-const l = s.join(c.getPath("userData"), "VsCodeOpener", "user.json");
-function O() {
-  i.handle("read-user-config", async () => {
-    try {
-      if (t.existsSync(l)) {
-        const r = await t.promises.readFile(l, "utf-8");
-        return JSON.parse(r);
-      }
-      return {};
-    } catch (r) {
-      return console.error("Failed to read user config:", r), {};
+function registerConfigIPC() {
+  ipcMain.handle("read-user-config", async () => {
+    return readConfig();
+  });
+  ipcMain.handle("write-user-config", async (_, data) => {
+    const success = writeConfig(data);
+    return { success };
+  });
+}
+function registerWindowIPC() {
+  ipcMain.on("window-control", (event, action) => {
+    const win2 = BrowserWindow.fromWebContents(event.sender);
+    if (!win2) return;
+    switch (action) {
+      case "minimize":
+        win2.minimize();
+        break;
+      case "maximize":
+        if (win2.isMaximized()) {
+          win2.unmaximize();
+        } else {
+          win2.maximize();
+        }
+        break;
+      case "close":
+        win2.close();
+        break;
     }
-  }), i.handle("write-user-config", async (r, n) => {
-    try {
-      const e = s.dirname(l);
-      return t.existsSync(e) || t.mkdirSync(e, { recursive: !0 }), await t.promises.writeFile(l, JSON.stringify(n, null, 2)), { success: !0 };
-    } catch (e) {
-      return console.error("Failed to write user config:", e), { success: !1, error: e.message };
+  });
+  ipcMain.on("get-maximize-state", (event) => {
+    const win2 = BrowserWindow.fromWebContents(event.sender);
+    if (win2) {
+      event.reply("maximize-change", win2.isMaximized());
     }
   });
 }
-function C() {
-  i.on("window-control", (r, n) => {
-    const e = d.fromWebContents(r.sender);
-    if (e)
-      switch (n) {
-        case "minimize":
-          e.minimize();
-          break;
-        case "maximize":
-          e.isMaximized() ? e.unmaximize() : e.maximize();
-          break;
-        case "close":
-          e.close();
-          break;
-      }
-  }), i.on("get-maximize-state", (r) => {
-    const n = d.fromWebContents(r.sender);
-    n && r.reply("maximize-change", n.isMaximized());
-  });
-}
-let m = null;
-c.on("window-all-closed", () => {
-  process.platform !== "darwin" && (c.quit(), m = null);
+let win = null;
+app.on("before-quit", () => {
+  if (win && !win.isDestroyed()) {
+    const bounds = win.getBounds();
+    saveWindowConfig({ width: bounds.width, height: bounds.height });
+  }
 });
-c.on("activate", () => {
-  d.getAllWindows().length === 0 && S();
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") {
+    app.quit();
+    win = null;
+  }
 });
-c.whenReady().then(() => {
-  m = S(), O(), C(), console.log("Main window created:", m.id);
+app.on("activate", () => {
+  if (BrowserWindow.getAllWindows().length === 0) createWindow();
+});
+app.whenReady().then(() => {
+  win = createWindow();
+  registerConfigIPC();
+  registerWindowIPC();
 });

@@ -16,7 +16,7 @@ app.mount('#app')
 nextTick(() => {
   if (window.ipcRenderer) {
     window.ipcRenderer.on('main-process-message', (_event, message) => {
-      console.log('Main process message:', message)
+      //  console.log('Main process message:', message)
     })
   } else {
     console.warn('ipcRenderer is not available. Are you running in an Electron environment?')

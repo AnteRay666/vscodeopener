@@ -19,9 +19,9 @@ const fileContent = ref('')
 const filePath = ref('')
 
 const openFile = async () => {
-  console.log('点击打开文件按钮')
+  //  console.log('点击打开文件按钮')
   const result = await window.electronAPI.openTxtFile()
-  console.log('返回结果：', result)
+  //  console.log('返回结果：', result)
 
   if (result) {
     filePath.value = result.path

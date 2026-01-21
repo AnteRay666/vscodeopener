@@ -1,11 +1,34 @@
 import { BrowserWindow } from 'electron'
 import path from 'path'
 import { __dirname, RENDERER_DIST, VITE_DEV_SERVER_URL } from '../config/env'
+import { readConfig, updateConfig } from './configManager'
+
+// 读取窗口配置
+function loadWindowConfig() {
+    const config = readConfig()
+    if (config.windowBounds) {
+        return config.windowBounds
+    }
+    // 默认窗口大小
+    return { width: 1080, height: 720 }
+}
+
+// 保存窗口配置
+export function saveWindowConfig(bounds: { width: number; height: number }) {
+    const success = updateConfig({ windowBounds: bounds })
+    if (success) {
+        //  console.log('Window bounds saved:', bounds)
+    } else {
+        console.error('Failed to save window bounds')
+    }
+}
 
 export function createWindow() {
+    const windowConfig = loadWindowConfig()
+
     const win = new BrowserWindow({
-        width: 1920,
-        height: 1280,
+        width: windowConfig.width,
+        height: windowConfig.height,
         autoHideMenuBar: true,
         frame: false, // 隐藏原生窗口边框
         transparent: false,
@@ -35,6 +58,14 @@ export function createWindow() {
 
     win.on('unmaximize', () => {
         win.webContents.send('maximize-change', false)
+    })
+
+    // 在窗口关闭时保存窗口大小
+    win.on('close', () => {
+        if (!win.isDestroyed()) {
+            const bounds = win.getBounds()
+            saveWindowConfig({ width: bounds.width, height: bounds.height })
+        }
     })
 
     return win
